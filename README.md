@@ -92,7 +92,7 @@ Open http://localhost:5000 in your browser.
 |--------|-------|-------------|
 | GET | / | Serves the frontend |
 | POST | /api/parse-resume | Accepts a resume file, returns extracted profile JSON |
-| POST | /api/match-jobs | Accepts profile JSON, returns 5 matched job opportunities |
+| POST | /api/match-jobs | Accepts profile JSON, returns all strong matched roles (each may include a `url` to apply) |
 
 ---
 

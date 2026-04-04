@@ -101,7 +101,7 @@ Use this exact schema:
 
 @app.route("/api/match-jobs", methods=["POST"])
 def match_jobs():
-    """Given a candidate profile JSON, return 5 best-fit sales job matches."""
+    """Given a candidate profile JSON, return all strong-fit sales job matches."""
     body = request.get_json()
     if not body:
         return jsonify({"error": "No profile data provided"}), 400
@@ -122,18 +122,20 @@ def match_jobs():
     ]
     profile_text = "\n".join(line for line in profile_lines if line)
 
-    prompt = f"""You are an expert sales recruiter AI. Based on this candidate profile, identify 5 highly specific, realistic sales job opportunities that are excellent matches. Use real company names where possible — well-known companies that actively hire for these sales roles.
+    prompt = f"""You are an expert sales recruiter AI. Based on this candidate profile, identify every distinct, realistic sales job opportunity that is a strong match — be thorough and do not stop at an arbitrary number. Include as many high-quality matches as the profile supports (often 12–25+ when many roles fit). Use real company names where possible — well-known companies that actively hire for these sales roles.
+
+For each role you MUST include a "url" field: a full https link the candidate can click. Prefer (in order): a direct job posting URL, the company's careers page with a relevant path or query if you know it, or a reputable job-board search URL scoped to that company and role type (e.g. LinkedIn or Indeed search). Never invent fictional paths; use URLs you believe are real and reachable.
 
 CANDIDATE PROFILE:
 {profile_text}
 
 Respond ONLY with a valid JSON array. No preamble, no markdown backticks. Format:
-[{{"title":"","company":"","location":"","matchScore":0,"reason":"2-3 sentence explanation of the fit","tags":["tag1","tag2","tag3","tag4"]}}]"""
+[{{"title":"","company":"","location":"","url":"","matchScore":0,"reason":"2-3 sentence explanation of the fit","tags":["tag1","tag2","tag3","tag4"]}}]"""
 
     try:
         message = client.messages.create(
             model=MODEL,
-            max_tokens=1000,
+            max_tokens=8192,
             messages=[{"role": "user", "content": prompt}],
         )
         raw = "".join(b.text for b in message.content if hasattr(b, "text"))

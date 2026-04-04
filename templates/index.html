@@ -353,6 +353,18 @@ input[type="file"] { display: none; }
 .match-bar-bg { flex: 1; height: 4px; background: var(--paper-dark); border-radius: 999px; overflow: hidden; }
 .match-bar-fill { height: 100%; border-radius: 999px; background: var(--green); transition: width 0.8s ease; }
 .match-reason { font-size: 13px; color: var(--ink-soft); line-height: 1.65; margin-bottom: 12px; }
+.match-link-wrap { margin-bottom: 12px; }
+.match-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(200, 90, 30, 0.35);
+}
+.match-link:hover { color: var(--accent-mid); border-bottom-color: var(--accent-mid); }
 .match-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .match-tag { font-size: 11px; padding: 3px 10px; border-radius: 999px; border: 0.5px solid var(--border-strong); color: var(--ink-mute); font-weight: 400; letter-spacing: 0.02em; }
 
@@ -687,33 +699,111 @@ async function runSearch() {
 }
 
 /* ── Render results ── */
+function safeJobUrl(u) {
+  if (u == null || typeof u !== 'string') return '';
+  const t = u.trim();
+  if (!t) return '';
+  try {
+    const parsed = new URL(t);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
+  } catch (_) { /* invalid */ }
+  return '';
+}
+
 function renderResults(results) {
   const el = document.getElementById('section-results');
+  el.textContent = '';
   if (!results || !results.length) {
-    el.innerHTML = '<div class="empty-state">No matches found. Try broadening the profile.</div>';
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = 'No matches found. Try broadening the profile.';
+    el.appendChild(empty);
     return;
   }
-  const sorted = [...results].sort((a, b) => b.matchScore - a.matchScore);
+  const sorted = [...results].sort(
+    (a, b) => (Number(b.matchScore) || 0) - (Number(a.matchScore) || 0)
+  );
   const scoreClass = s => s >= 85 ? 'score-high' : s >= 70 ? 'score-mid' : 'score-low';
 
-  el.innerHTML = `
-    <div class="results-header">
-      <div class="section-title">Top matches</div>
-      <div class="results-count">${sorted.length} roles found</div>
-    </div>` +
-    sorted.map(r => `
-    <div class="match-card">
-      <div class="match-card-top">
-        <div class="match-title">${r.title}</div>
-        <div class="match-score-badge ${scoreClass(r.matchScore)}">${Math.round(r.matchScore)}% match</div>
-      </div>
-      <div class="match-company">${r.company} &middot; ${r.location || 'Location TBD'}</div>
-      <div class="match-bar-wrap">
-        <div class="match-bar-bg"><div class="match-bar-fill" style="width:${Math.min(100, r.matchScore)}%"></div></div>
-      </div>
-      <div class="match-reason">${r.reason}</div>
-      <div class="match-tags">${(r.tags || []).map(t => `<span class="match-tag">${t}</span>`).join('')}</div>
-    </div>`).join('');
+  const header = document.createElement('div');
+  header.className = 'results-header';
+  const hTitle = document.createElement('div');
+  hTitle.className = 'section-title';
+  hTitle.textContent = 'Matching positions';
+  const count = document.createElement('div');
+  count.className = 'results-count';
+  count.textContent = `${sorted.length} roles found`;
+  header.append(hTitle, count);
+  el.appendChild(header);
+
+  for (const r of sorted) {
+    const score = Math.min(100, Math.max(0, Number(r.matchScore) || 0));
+    const card = document.createElement('div');
+    card.className = 'match-card';
+
+    const top = document.createElement('div');
+    top.className = 'match-card-top';
+    const titleEl = document.createElement('div');
+    titleEl.className = 'match-title';
+    titleEl.textContent = r.title || 'Role';
+    const badge = document.createElement('div');
+    badge.className = `match-score-badge ${scoreClass(score)}`;
+    badge.textContent = `${Math.round(score)}% match`;
+    top.append(titleEl, badge);
+    card.appendChild(top);
+
+    const company = document.createElement('div');
+    company.className = 'match-company';
+    company.textContent = `${r.company || 'Company TBD'} · ${r.location || 'Location TBD'}`;
+    card.appendChild(company);
+
+    const barWrap = document.createElement('div');
+    barWrap.className = 'match-bar-wrap';
+    const barBg = document.createElement('div');
+    barBg.className = 'match-bar-bg';
+    const barFill = document.createElement('div');
+    barFill.className = 'match-bar-fill';
+    barFill.style.width = `${score}%`;
+    barBg.appendChild(barFill);
+    barWrap.appendChild(barBg);
+    card.appendChild(barWrap);
+
+    if (r.reason) {
+      const reason = document.createElement('div');
+      reason.className = 'match-reason';
+      reason.textContent = r.reason;
+      card.appendChild(reason);
+    }
+
+    const url = safeJobUrl(r.url || r.applyUrl);
+    if (url) {
+      const linkWrap = document.createElement('div');
+      linkWrap.className = 'match-link-wrap';
+      const a = document.createElement('a');
+      a.className = 'match-link';
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = 'View listing or apply →';
+      linkWrap.appendChild(a);
+      card.appendChild(linkWrap);
+    }
+
+    const tags = r.tags || [];
+    if (tags.length) {
+      const tagRow = document.createElement('div');
+      tagRow.className = 'match-tags';
+      for (const t of tags) {
+        const span = document.createElement('span');
+        span.className = 'match-tag';
+        span.textContent = t;
+        tagRow.appendChild(span);
+      }
+      card.appendChild(tagRow);
+    }
+
+    el.appendChild(card);
+  }
 }
 </script>
 </body>
