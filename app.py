@@ -6,6 +6,7 @@ from pathlib import Path
 import anthropic
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
 
 _root = Path(__file__).resolve().parent
@@ -13,6 +14,20 @@ load_dotenv(_root / ".env")
 
 app = Flask(__name__)
 CORS(app)
+
+
+def _comma_join_field(body, key):
+    """Build a comma-separated line from str, list, or missing profile field."""
+    val = body.get(key)
+    if val is None or val == "":
+        return None
+    if isinstance(val, str):
+        s = val.strip()
+        return s or None
+    if isinstance(val, (list, tuple)):
+        parts = [str(x).strip() for x in val if str(x).strip()]
+        return ", ".join(parts) if parts else None
+    return str(val)
 
 client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 MODEL = "claude-sonnet-4-20250514"
@@ -40,6 +55,18 @@ def _parse_json_array(raw: str):
     if not isinstance(value, list):
         raise ValueError("Model response was not a JSON array")
     return value
+
+
+@app.errorhandler(Exception)
+def _api_json_errors(e):
+    """Never return Flask's HTML error page for /api/* — the front end expects JSON."""
+    path = getattr(request, "path", "") or ""
+    if not path.startswith("/api/"):
+        raise e
+    if isinstance(e, HTTPException):
+        return jsonify({"error": e.description or str(e)}), e.code
+    app.logger.exception("API error: %s", path)
+    return jsonify({"error": str(e) or type(e).__name__}), 500
 
 
 @app.route("/")
@@ -126,9 +153,12 @@ Use this exact schema:
 @app.route("/api/match-jobs", methods=["POST"])
 def match_jobs():
     """Given a candidate profile JSON, return all strong-fit sales job matches."""
-    body = request.get_json()
-    if not body:
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
         return jsonify({"error": "No profile data provided"}), 400
+
+    industries_s = _comma_join_field(body, "industries")
+    skills_s = _comma_join_field(body, "skills")
 
     profile_lines = [
         body.get("name") and f"Candidate: {body['name']}",
@@ -137,8 +167,8 @@ def match_jobs():
         body.get("location") and f"Target location: {body['location']}",
         body.get("targetComp") and f"Target OTE: {body['targetComp']}",
         body.get("education") and f"Education: {body['education']}",
-        body.get("industries") and f"Industry expertise: {', '.join(body['industries'])}",
-        body.get("skills") and f"Key skills: {', '.join(body['skills'])}",
+        industries_s and f"Industry expertise: {industries_s}",
+        skills_s and f"Key skills: {skills_s}",
         body.get("achievements") and f"Achievements: {body['achievements']}",
         body.get("preferredRole") and f"Preferred role type: {body['preferredRole']}",
         body.get("companyStage") and f"Company stage preference: {body['companyStage']}",
@@ -156,18 +186,18 @@ CANDIDATE PROFILE:
 Respond ONLY with a valid JSON array. No preamble, no markdown backticks. Format:
 [{{"title":"","company":"","location":"","url":"","matchScore":0,"reason":"2-3 sentence explanation of the fit","tags":["tag1","tag2","tag3","tag4"]}}]"""
 
-    try:
-        message = client.messages.create(
-            model=MODEL,
-            max_tokens=8192,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        raw = "".join(b.text for b in message.content if hasattr(b, "text"))
-        results = _parse_json_array(raw)
-        return jsonify({"success": True, "results": results})
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    message = client.messages.create(
+        model=os.environ.get("ANTHROPIC_MODEL", MODEL),
+        max_tokens=4096,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    raw = "".join(b.text for b in message.content if hasattr(b, "text"))
+    results = _parse_json_array(raw)
+    if not isinstance(results, list):
+        return jsonify({"error": "Model returned an unexpected format"}), 500
+    payload = {"success": True, "results": results}
+    json.dumps(payload)
+    return jsonify(payload)
 
 
 if __name__ == "__main__":
