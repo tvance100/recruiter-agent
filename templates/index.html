@@ -685,13 +685,27 @@ async function runSearch() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    const data = await resp.json();
+    const text = await resp.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      const hint =
+        text.trimStart().startsWith('<')
+          ? ' The server returned an HTML error page (often a timeout on Render). Try again, or ask your host for a longer request timeout.'
+          : '';
+      throw new Error(`Invalid response from server (${resp.status}).${hint}`);
+    }
     if (!resp.ok || data.error) throw new Error(data.error || 'Search failed');
     renderResults(data.results);
     setStepState(2, 'done');
     setStepState(3, 'active');
   } catch (err) {
-    resultsEl.innerHTML = `<div class="status-banner error">✕ Search failed: ${err.message}. Please try again.</div>`;
+    const banner = document.createElement('div');
+    banner.className = 'status-banner error';
+    banner.textContent = `✕ Search failed: ${err.message} Please try again.`;
+    resultsEl.textContent = '';
+    resultsEl.appendChild(banner);
   }
 
   btn.disabled = false;

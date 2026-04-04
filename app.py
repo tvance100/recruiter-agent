@@ -18,6 +18,30 @@ client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 MODEL = "claude-sonnet-4-20250514"
 
 
+def _parse_json_array(raw: str):
+    """Parse a JSON array from model output; tolerate preamble or markdown fences."""
+    s = raw.strip()
+    for fence in ("```json", "```"):
+        if s.startswith(fence):
+            s = s[len(fence) :].strip()
+    if s.endswith("```"):
+        s = s[:-3].strip()
+    try:
+        out = json.loads(s)
+        if isinstance(out, list):
+            return out
+    except json.JSONDecodeError:
+        pass
+    start = s.find("[")
+    if start == -1:
+        raise ValueError("No JSON array found in model response")
+    decoder = json.JSONDecoder()
+    value, _ = decoder.raw_decode(s[start:])
+    if not isinstance(value, list):
+        raise ValueError("Model response was not a JSON array")
+    return value
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -139,8 +163,7 @@ Respond ONLY with a valid JSON array. No preamble, no markdown backticks. Format
             messages=[{"role": "user", "content": prompt}],
         )
         raw = "".join(b.text for b in message.content if hasattr(b, "text"))
-        clean = raw.replace("```json", "").replace("```", "").strip()
-        results = json.loads(clean)
+        results = _parse_json_array(raw)
         return jsonify({"success": True, "results": results})
 
     except Exception as e:
