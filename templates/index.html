@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TalentMatch — AI Sales Recruiter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --ink: #0f0e0c;
+  --ink-soft: #5a5650;
+  --ink-mute: #a09b94;
+  --paper: #faf8f4;
+  --paper-warm: #f2ede4;
+  --paper-dark: #e8e0d3;
+  --accent: #c85a1e;
+  --accent-light: #f5e8df;
+  --accent-mid: #e8784a;
+  --green: #2d7a4f;
+  --green-light: #e0f0e8;
+  --border: rgba(15,14,12,0.12);
+  --border-strong: rgba(15,14,12,0.22);
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ── Header ── */
+header {
+  background: var(--ink);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: var(--paper);
+  letter-spacing: -0.02em;
+}
+.logo span { color: var(--accent-mid); }
+.header-tag {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  font-weight: 300;
+}
+
+/* ── Hero ── */
+.hero {
+  background: var(--ink);
+  padding: 4rem 2rem 5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 120%, rgba(200,90,30,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-mid);
+  font-weight: 400;
+  margin-bottom: 1rem;
+}
+.hero h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  color: var(--paper);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.25rem;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.hero h1 em { color: var(--accent-mid); font-style: italic; }
+.hero p {
+  color: #a09b94;
+  font-size: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+/* ── Main layout ── */
+main {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem;
+}
+
+/* ── Step indicators ── */
+.steps-nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 3rem;
+}
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  opacity: 0.35;
+  transition: opacity 0.3s;
+}
+.step-item.active, .step-item.done { opacity: 1; }
+.step-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+  transition: all 0.3s;
+  background: var(--paper);
+}
+.step-item.active .step-num { border-color: var(--accent); color: var(--accent); }
+.step-item.done .step-num { background: var(--accent); border-color: var(--accent); color: white; font-size: 15px; }
+.step-label { font-size: 13px; font-weight: 400; color: var(--ink-soft); }
+.step-item.active .step-label { color: var(--ink); font-weight: 500; }
+.step-connector { flex: 0 0 40px; height: 1px; background: var(--border); }
+
+/* ── Section ── */
+.section { margin-bottom: 2.5rem; }
+.section-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.5rem;
+  color: var(--ink);
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.01em;
+}
+.section-sub { font-size: 13px; color: var(--ink-mute); margin-bottom: 1.25rem; }
+
+/* ── Upload zone ── */
+.upload-zone {
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--paper-warm);
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+.upload-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--paper-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 22px;
+  transition: background 0.2s;
+}
+.upload-zone:hover .upload-icon { background: #f0ddd4; }
+.upload-title { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+.upload-sub { font-size: 13px; color: var(--ink-mute); }
+.upload-file-name {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+}
+input[type="file"] { display: none; }
+
+/* ── Parse status banner ── */
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-top: 12px;
+  font-weight: 400;
+}
+.status-banner.loading { background: #eef4ff; color: #2a5faa; border: 0.5px solid #c0d4f5; }
+.status-banner.success { background: var(--green-light); color: var(--green); border: 0.5px solid #b0ddc4; }
+.status-banner.error { background: #fef0ee; color: #b83820; border: 0.5px solid #f0c4bb; }
+
+/* ── Form card ── */
+.form-card {
+  background: white;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: 0 2px 12px rgba(15,14,12,0.04);
+}
+.field { margin-bottom: 1rem; }
+.field:last-child { margin-bottom: 0; }
+.field label { font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 6px; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  transition: border-color 0.15s;
+  outline: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+.field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media (max-width: 580px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+/* ── Tag inputs ── */
+.tag-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  cursor: text;
+  transition: border-color 0.15s;
+}
+.tag-wrap:focus-within { border-color: var(--accent); }
+.tag {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+}
+.tag button { background: none; border: none; cursor: pointer; color: var(--accent); font-size: 14px; padding: 0; line-height: 1; }
+.tag-input { border: none; background: transparent; outline: none; font-size: 13px; color: var(--ink); min-width: 80px; flex: 1; padding: 2px 0; font-family: 'DM Sans', sans-serif; }
+.field-hint { font-size: 11px; color: var(--ink-mute); margin-top: 4px; }
+
+/* ── Divider ── */
+.divider { border: none; border-top: 0.5px solid var(--border); margin: 2rem 0; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 24px;
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s;
+  border: none;
+  outline: none;
+  text-decoration: none;
+}
+.btn-primary { background: var(--accent); color: white; width: 100%; font-size: 15px; padding: 13px; border-radius: var(--radius-lg); }
+.btn-primary:hover { background: #b34d16; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(200,90,30,0.25); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-ghost { background: transparent; color: var(--ink-soft); border: 0.5px solid var(--border-strong); font-size: 13px; padding: 8px 16px; }
+.btn-ghost:hover { background: var(--paper-warm); color: var(--ink); }
+
+/* ── Locked state ── */
+.locked { opacity: 0.4; pointer-events: none; transition: opacity 0.4s; }
+.locked.unlocked { opacity: 1; pointer-events: auto; }
+
+/* ── Results ── */
+.results-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+.results-count { font-size: 13px; color: var(--ink-mute); }
+
+.match-card {
+  background: white;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 12px;
+  transition: box-shadow 0.2s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.match-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.match-card:hover { box-shadow: 0 4px 20px rgba(15,14,12,0.07); transform: translateY(-1px); }
+.match-card:hover::before { opacity: 1; }
+
+.match-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.match-title { font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--ink); letter-spacing: -0.01em; }
+.match-score-badge {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 3px 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.score-high { background: var(--green-light); color: var(--green); }
+.score-mid { background: #fff8e6; color: #8a6800; }
+.score-low { background: #fef0ee; color: #b83820; }
+.match-company { font-size: 13px; color: var(--ink-soft); margin-bottom: 10px; }
+.match-bar-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.match-bar-bg { flex: 1; height: 4px; background: var(--paper-dark); border-radius: 999px; overflow: hidden; }
+.match-bar-fill { height: 100%; border-radius: 999px; background: var(--green); transition: width 0.8s ease; }
+.match-reason { font-size: 13px; color: var(--ink-soft); line-height: 1.65; margin-bottom: 12px; }
+.match-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.match-tag { font-size: 11px; padding: 3px 10px; border-radius: 999px; border: 0.5px solid var(--border-strong); color: var(--ink-mute); font-weight: 400; letter-spacing: 0.02em; }
+
+/* ── Spinner ── */
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Empty / loading states ── */
+.empty-state { text-align: center; padding: 3rem 1rem; color: var(--ink-mute); font-size: 14px; }
+.searching-state { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-soft); padding: 1.5rem 0; }
+
+/* ── Footer ── */
+footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--ink-mute); border-top: 0.5px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Talent<span>Match</span></div>
+  <div class="header-tag">AI Sales Recruiting</div>
+</header>
+
+<div class="hero">
+  <div class="hero-eyebrow">Powered by Claude AI</div>
+  <h1>Find the <em>perfect role</em> for every sales candidate</h1>
+  <p>Upload a resume, review the extracted profile, and get AI-matched job opportunities in seconds.</p>
+</div>
+
+<main>
+
+  <!-- Step nav -->
+  <div class="steps-nav">
+    <div class="step-item active" id="step-nav-1">
+      <div class="step-num" id="step-num-1">1</div>
+      <div class="step-label">Upload resume</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="step-nav-2">
+      <div class="step-num" id="step-num-2">2</div>
+      <div class="step-label">Review profile</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="step-nav-3">
+      <div class="step-num" id="step-num-3">3</div>
+      <div class="step-label">View matches</div>
+    </div>
+  </div>
+
+  <!-- Step 1: Upload -->
+  <div class="section" id="section-upload">
+    <div class="section-title">Upload resume</div>
+    <div class="section-sub">PDF, DOCX, or TXT — Claude will extract all candidate details automatically.</div>
+
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+      <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt" onchange="handleFile(this.files[0])" />
+      <div class="upload-icon">📄</div>
+      <div class="upload-title">Drop resume here or click to browse</div>
+      <div class="upload-sub">Supports PDF, DOCX, and TXT files</div>
+      <div class="upload-file-name" id="file-name-display"></div>
+    </div>
+
+    <div id="parse-status"></div>
+
+    <div style="text-align:center; margin-top: 1.5rem;">
+      <button class="btn btn-ghost" onclick="skipToManual()">Skip — enter profile manually</button>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- Step 2: Profile -->
+  <div class="section locked" id="section-profile">
+    <div class="section-title">Review &amp; refine profile</div>
+    <div class="section-sub">AI has pre-filled what it found. Correct anything and fill in any gaps before searching.</div>
+
+    <div class="form-card">
+      <div class="grid2 field">
+        <div>
+          <label>Full name</label>
+          <input type="text" id="f-name" placeholder="e.g. Sarah Chen" />
+        </div>
+        <div>
+          <label>Current title</label>
+          <input type="text" id="f-title" placeholder="e.g. Senior Account Executive" />
+        </div>
+      </div>
+      <div class="grid3 field">
+        <div>
+          <label>Years of experience</label>
+          <input type="text" id="f-exp" placeholder="e.g. 7" />
+        </div>
+        <div>
+          <label>Target location</label>
+          <input type="text" id="f-location" placeholder="e.g. New York, Remote" />
+        </div>
+        <div>
+          <label>Target OTE</label>
+          <input type="text" id="f-comp" placeholder="e.g. $180K+" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Education</label>
+        <input type="text" id="f-edu" placeholder="e.g. BA Business, University of Michigan" />
+      </div>
+      <div class="field">
+        <label>Industry expertise</label>
+        <div class="tag-wrap" id="ind-wrap"><input class="tag-input" id="ind-input" placeholder="Type and press Enter…" /></div>
+        <div class="field-hint">Press Enter after each industry (e.g. SaaS, FinTech, Healthcare IT)</div>
+      </div>
+      <div class="field">
+        <label>Key skills</label>
+        <div class="tag-wrap" id="sk-wrap"><input class="tag-input" id="sk-input" placeholder="Type and press Enter…" /></div>
+        <div class="field-hint">Press Enter after each skill (e.g. Enterprise sales, MEDDIC, Salesforce)</div>
+      </div>
+      <div class="field">
+        <label>Achievements &amp; summary</label>
+        <textarea id="f-bio" placeholder="Key wins, quota attainment, deal sizes, sales motion preferences…"></textarea>
+      </div>
+    </div>
+
+    <div style="margin-top: 1.5rem;">
+      <div class="section-title" style="font-size: 1.2rem; margin-bottom: 0.25rem;">Search preferences</div>
+      <div class="section-sub">Optional filters to narrow results.</div>
+      <div class="form-card">
+        <div class="grid3">
+          <div class="field">
+            <label>Role type</label>
+            <select id="p-role">
+              <option value="">Any</option>
+              <option>Account Executive</option>
+              <option>Sales Manager</option>
+              <option>Director of Sales</option>
+              <option>VP of Sales</option>
+              <option>BDR/SDR Manager</option>
+              <option>Sales Engineer</option>
+              <option>Customer Success</option>
+              <option>Revenue Operations</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Company stage</label>
+            <select id="p-stage">
+              <option value="">Any</option>
+              <option>Startup (Series A-B)</option>
+              <option>Growth (Series C+)</option>
+              <option>Pre-IPO</option>
+              <option>Public company</option>
+              <option>Enterprise</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Work model</label>
+            <select id="p-model">
+              <option value="">Any</option>
+              <option>Remote</option>
+              <option>Hybrid</option>
+              <option>On-site</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="search-btn" onclick="runSearch()" style="margin-top:1.5rem;">
+      Find matching roles →
+    </button>
+  </div>
+
+  <hr class="divider" id="results-divider" style="display:none;" />
+
+  <!-- Step 3: Results -->
+  <div class="section" id="section-results"></div>
+
+</main>
+
+<footer>TalentMatch &mdash; AI-powered sales recruiting &mdash; Built with Claude</footer>
+
+<script>
+const industries = [], skills = [];
+
+/* ── Tag inputs ── */
+function setupTags(inputId, wrapId, arr) {
+  const inp = document.getElementById(inputId);
+  const wrap = document.getElementById(wrapId);
+  wrap.addEventListener('click', () => inp.focus());
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && inp.value.trim()) {
+      e.preventDefault();
+      addTag(inp.value.trim(), wrapId, arr, inp);
+    }
+  });
+}
+function addTag(val, wrapId, arr, inp) {
+  if (!val || arr.includes(val)) return;
+  arr.push(val);
+  const wrap = document.getElementById(wrapId);
+  const tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.dataset.val = val;
+  tag.innerHTML = `${val} <button type="button" onclick="removeTag(this,'${wrapId}',${JSON.stringify(arr)})">×</button>`;
+  wrap.insertBefore(tag, inp || wrap.lastChild);
+}
+function removeTag(btn, wrapId, arr) {
+  const tag = btn.parentElement;
+  const idx = arr.indexOf(tag.dataset.val);
+  if (idx > -1) arr.splice(idx, 1);
+  tag.remove();
+}
+function clearTags(wrapId, arr) {
+  arr.length = 0;
+  document.getElementById(wrapId).querySelectorAll('.tag').forEach(t => t.remove());
+}
+setupTags('ind-input', 'ind-wrap', industries);
+setupTags('sk-input', 'sk-wrap', skills);
+
+/* ── Drag & drop ── */
+const zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+
+/* ── File handling ── */
+async function handleFile(file) {
+  if (!file) return;
+  document.getElementById('file-name-display').textContent = file.name;
+  showStatus('loading', 'Uploading and parsing resume…');
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const resp = await fetch('/api/parse-resume', { method: 'POST', body: formData });
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error || 'Parse failed');
+    populateForm(data.data);
+    showStatus('success', 'Resume parsed — profile pre-filled below. Review and adjust as needed.');
+    unlockProfile();
+  } catch (err) {
+    showStatus('error', 'Could not parse resume automatically. Fill in the profile below manually.');
+    unlockProfile();
+  }
+}
+
+function populateForm(d) {
+  if (d.name) document.getElementById('f-name').value = d.name;
+  if (d.title) document.getElementById('f-title').value = d.title;
+  if (d.yearsExperience) document.getElementById('f-exp').value = d.yearsExperience;
+  if (d.location) document.getElementById('f-location').value = d.location;
+  if (d.education) document.getElementById('f-edu').value = d.education;
+  if (d.achievements) document.getElementById('f-bio').value = d.achievements;
+  clearTags('ind-wrap', industries);
+  clearTags('sk-wrap', skills);
+  (d.industries || []).forEach(v => addTag(v, 'ind-wrap', industries, document.getElementById('ind-input')));
+  (d.skills || []).forEach(v => addTag(v, 'sk-wrap', skills, document.getElementById('sk-input')));
+}
+
+function showStatus(type, msg) {
+  const icons = { loading: '<div class="spinner"></div>', success: '✓', error: '✕' };
+  document.getElementById('parse-status').innerHTML =
+    `<div class="status-banner ${type}">${icons[type]}<span>${msg}</span></div>`;
+}
+
+function unlockProfile() {
+  const s = document.getElementById('section-profile');
+  s.classList.remove('locked');
+  s.classList.add('unlocked');
+  setStepState(1, 'done');
+  setStepState(2, 'active');
+  setTimeout(() => s.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function skipToManual() { unlockProfile(); }
+
+/* ── Step state ── */
+function setStepState(num, state) {
+  const nav = document.getElementById(`step-nav-${num}`);
+  const badge = document.getElementById(`step-num-${num}`);
+  nav.className = `step-item ${state}`;
+  if (state === 'done') badge.textContent = '✓';
+}
+
+/* ── Job search ── */
+async function runSearch() {
+  const title = document.getElementById('f-title').value.trim();
+  const bio = document.getElementById('f-bio').value.trim();
+  if (!title && !bio && skills.length === 0) {
+    alert('Please add at least a title, skills, or achievements before searching.');
+    return;
+  }
+
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="border-color:rgba(255,255,255,0.4);border-top-color:transparent;"></div> Searching…';
+
+  document.getElementById('results-divider').style.display = '';
+  const resultsEl = document.getElementById('section-results');
+  resultsEl.innerHTML = '<div class="searching-state"><div class="spinner"></div> Analyzing profile and identifying best-fit roles…</div>';
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const payload = {
+    name: document.getElementById('f-name').value.trim(),
+    title,
+    yearsExperience: document.getElementById('f-exp').value.trim(),
+    location: document.getElementById('f-location').value.trim(),
+    targetComp: document.getElementById('f-comp').value.trim(),
+    education: document.getElementById('f-edu').value.trim(),
+    industries: [...industries],
+    skills: [...skills],
+    achievements: bio,
+    preferredRole: document.getElementById('p-role').value,
+    companyStage: document.getElementById('p-stage').value,
+    workModel: document.getElementById('p-model').value,
+  };
+
+  try {
+    const resp = await fetch('/api/match-jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error || 'Search failed');
+    renderResults(data.results);
+    setStepState(2, 'done');
+    setStepState(3, 'active');
+  } catch (err) {
+    resultsEl.innerHTML = `<div class="status-banner error">✕ Search failed: ${err.message}. Please try again.</div>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = 'Find matching roles →';
+}
+
+/* ── Render results ── */
+function renderResults(results) {
+  const el = document.getElementById('section-results');
+  if (!results || !results.length) {
+    el.innerHTML = '<div class="empty-state">No matches found. Try broadening the profile.</div>';
+    return;
+  }
+  const sorted = [...results].sort((a, b) => b.matchScore - a.matchScore);
+  const scoreClass = s => s >= 85 ? 'score-high' : s >= 70 ? 'score-mid' : 'score-low';
+
+  el.innerHTML = `
+    <div class="results-header">
+      <div class="section-title">Top matches</div>
+      <div class="results-count">${sorted.length} roles found</div>
+    </div>` +
+    sorted.map(r => `
+    <div class="match-card">
+      <div class="match-card-top">
+        <div class="match-title">${r.title}</div>
+        <div class="match-score-badge ${scoreClass(r.matchScore)}">${Math.round(r.matchScore)}% match</div>
+      </div>
+      <div class="match-company">${r.company} &middot; ${r.location || 'Location TBD'}</div>
+      <div class="match-bar-wrap">
+        <div class="match-bar-bg"><div class="match-bar-fill" style="width:${Math.min(100, r.matchScore)}%"></div></div>
+      </div>
+      <div class="match-reason">${r.reason}</div>
+      <div class="match-tags">${(r.tags || []).map(t => `<span class="match-tag">${t}</span>`).join('')}</div>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
