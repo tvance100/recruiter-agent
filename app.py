@@ -4,7 +4,7 @@ import base64
 from pathlib import Path
 
 import anthropic
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, Response
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
@@ -57,16 +57,31 @@ def _parse_json_array(raw: str):
     return value
 
 
+def _json_error(message: str, status: int = 500):
+    """Always valid JSON + correct Content-Type (avoids HTML fallback confusing the client)."""
+    return Response(
+        json.dumps({"error": message}),
+        status=status,
+        mimetype="application/json",
+    )
+
+
+def _api_path() -> str:
+    """PATH_INFO is reliable inside error handlers; request.path can be wrong in edge cases."""
+    return request.environ.get("PATH_INFO") or getattr(request, "path", "") or ""
+
+
 @app.errorhandler(Exception)
 def _api_json_errors(e):
     """Never return Flask's HTML error page for /api/* — the front end expects JSON."""
-    path = getattr(request, "path", "") or ""
+    path = _api_path()
     if not path.startswith("/api/"):
         raise e
     if isinstance(e, HTTPException):
-        return jsonify({"error": e.description or str(e)}), e.code
+        code = e.code if e.code is not None else 500
+        return _json_error(e.description or str(e), code)
     app.logger.exception("API error: %s", path)
-    return jsonify({"error": str(e) or type(e).__name__}), 500
+    return _json_error(str(e) or type(e).__name__, 500)
 
 
 @app.route("/")
@@ -176,19 +191,21 @@ def match_jobs():
     ]
     profile_text = "\n".join(line for line in profile_lines if line)
 
-    prompt = f"""You are an expert sales recruiter AI. Based on this candidate profile, identify every distinct, realistic sales job opportunity that is a strong match — be thorough and do not stop at an arbitrary number. Include as many high-quality matches as the profile supports (often 12–25+ when many roles fit). Use real company names where possible — well-known companies that actively hire for these sales roles.
+    prompt = f"""You are an expert sales recruiter AI. Based on this candidate profile, list up to 12 distinct, realistic sales job opportunities that are strong matches (include every strong match you find, but cap at 12 roles). Use real company names where possible.
 
-For each role you MUST include a "url" field: a full https link the candidate can click. Prefer (in order): a direct job posting URL, the company's careers page with a relevant path or query if you know it, or a reputable job-board search URL scoped to that company and role type (e.g. LinkedIn or Indeed search). Never invent fictional paths; use URLs you believe are real and reachable.
+Each role MUST include "url": a full https link (job posting, company careers page, or a scoped LinkedIn/Indeed search URL). Use real, reachable URLs only.
+
+Keep each "reason" to 1–2 sentences. Keep "tags" to 3–4 short items.
 
 CANDIDATE PROFILE:
 {profile_text}
 
-Respond ONLY with a valid JSON array. No preamble, no markdown backticks. Format:
-[{{"title":"","company":"","location":"","url":"","matchScore":0,"reason":"2-3 sentence explanation of the fit","tags":["tag1","tag2","tag3","tag4"]}}]"""
+Respond ONLY with a valid JSON array. No preamble, no markdown. Schema:
+[{{"title":"","company":"","location":"","url":"","matchScore":0,"reason":"","tags":[]}}]"""
 
     message = client.messages.create(
         model=os.environ.get("ANTHROPIC_MODEL", MODEL),
-        max_tokens=4096,
+        max_tokens=2048,
         messages=[{"role": "user", "content": prompt}],
     )
     raw = "".join(b.text for b in message.content if hasattr(b, "text"))
