@@ -480,8 +480,17 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--ink-mu
         <div class="field-hint">Press Enter after each skill (e.g. Enterprise sales, MEDDIC, Salesforce)</div>
       </div>
       <div class="field">
+        <label>Certifications</label>
+        <div class="tag-wrap" id="cert-wrap"><input class="tag-input" id="cert-input" placeholder="Type and press Enter…" /></div>
+        <div class="field-hint">Press Enter after each certification (e.g. AWS, HubSpot, Sandler, MEDDPICC)</div>
+      </div>
+      <div class="field">
         <label>Achievements &amp; summary</label>
         <textarea id="f-bio" placeholder="Key wins, quota attainment, deal sizes, sales motion preferences…"></textarea>
+      </div>
+      <div class="field">
+        <label>Other information</label>
+        <textarea id="f-other" placeholder="Any additional candidate context, preferences, constraints, or notes..."></textarea>
       </div>
     </div>
 
@@ -543,7 +552,7 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--ink-mu
 <footer>TalentMatch &mdash; AI-powered sales recruiting &mdash; Built with Claude</footer>
 
 <script>
-const industries = [], skills = [];
+const industries = [], skills = [], certifications = [];
 
 /* ── Tag inputs ── */
 function setupTags(inputId, wrapId, arr) {
@@ -554,6 +563,7 @@ function setupTags(inputId, wrapId, arr) {
     if (e.key === 'Enter' && inp.value.trim()) {
       e.preventDefault();
       addTag(inp.value.trim(), wrapId, arr, inp);
+      inp.value = '';
     }
   });
 }
@@ -564,10 +574,12 @@ function addTag(val, wrapId, arr, inp) {
   const tag = document.createElement('span');
   tag.className = 'tag';
   tag.dataset.val = val;
-  tag.innerHTML = `${val} <button type="button" onclick="removeTag(this,'${wrapId}',${JSON.stringify(arr)})">×</button>`;
+  tag.innerHTML = `${val} <button type="button" onclick="removeTag(this,'${wrapId}')">×</button>`;
   wrap.insertBefore(tag, inp || wrap.lastChild);
 }
-function removeTag(btn, wrapId, arr) {
+function removeTag(btn, wrapId) {
+  const arrMap = { 'ind-wrap': industries, 'sk-wrap': skills, 'cert-wrap': certifications };
+  const arr = arrMap[wrapId] || [];
   const tag = btn.parentElement;
   const idx = arr.indexOf(tag.dataset.val);
   if (idx > -1) arr.splice(idx, 1);
@@ -579,6 +591,7 @@ function clearTags(wrapId, arr) {
 }
 setupTags('ind-input', 'ind-wrap', industries);
 setupTags('sk-input', 'sk-wrap', skills);
+setupTags('cert-input', 'cert-wrap', certifications);
 
 /* ── Drag & drop ── */
 const zone = document.getElementById('upload-zone');
@@ -615,10 +628,13 @@ function populateForm(d) {
   if (d.location) document.getElementById('f-location').value = d.location;
   if (d.education) document.getElementById('f-edu').value = d.education;
   if (d.achievements) document.getElementById('f-bio').value = d.achievements;
+  if (d.otherInfo) document.getElementById('f-other').value = d.otherInfo;
   clearTags('ind-wrap', industries);
   clearTags('sk-wrap', skills);
+  clearTags('cert-wrap', certifications);
   (d.industries || []).forEach(v => addTag(v, 'ind-wrap', industries, document.getElementById('ind-input')));
   (d.skills || []).forEach(v => addTag(v, 'sk-wrap', skills, document.getElementById('sk-input')));
+  (d.certifications || []).forEach(v => addTag(v, 'cert-wrap', certifications, document.getElementById('cert-input')));
 }
 
 function showStatus(type, msg) {
@@ -673,7 +689,9 @@ async function runSearch() {
     education: document.getElementById('f-edu').value.trim(),
     industries: [...industries],
     skills: [...skills],
+    certifications: [...certifications],
     achievements: bio,
+    otherInfo: document.getElementById('f-other').value.trim(),
     preferredRole: document.getElementById('p-role').value,
     companyStage: document.getElementById('p-stage').value,
     workModel: document.getElementById('p-model').value,

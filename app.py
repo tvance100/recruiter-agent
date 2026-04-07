@@ -108,15 +108,18 @@ Use this exact schema:
   "yearsExperience": "",
   "location": "",
   "education": "",
+  "certifications": [],
   "industries": [],
   "skills": [],
-  "achievements": ""
+  "achievements": "",
+  "otherInfo": ""
 }
 - "title": most recent job title
 - "yearsExperience": estimate total years in sales/professional work as a number string
 - "location": city/state or "Remote" if applicable
 - "industries": array of industry verticals the candidate has worked in (e.g. ["SaaS", "FinTech"])
 - "skills": array of sales skills, methodologies, tools (e.g. ["Enterprise sales", "MEDDIC", "Salesforce"])
+- "certifications": array of relevant professional certifications, licenses, or training credentials
 - "achievements": 2-3 sentence summary of standout accomplishments, quota performance, deal sizes"""
 
     try:
@@ -174,6 +177,7 @@ def match_jobs():
 
     industries_s = _comma_join_field(body, "industries")
     skills_s = _comma_join_field(body, "skills")
+    certs_s = _comma_join_field(body, "certifications")
 
     profile_lines = [
         body.get("name") and f"Candidate: {body['name']}",
@@ -182,9 +186,11 @@ def match_jobs():
         body.get("location") and f"Target location: {body['location']}",
         body.get("targetComp") and f"Target OTE: {body['targetComp']}",
         body.get("education") and f"Education: {body['education']}",
+        certs_s and f"Certifications: {certs_s}",
         industries_s and f"Industry expertise: {industries_s}",
         skills_s and f"Key skills: {skills_s}",
         body.get("achievements") and f"Achievements: {body['achievements']}",
+        body.get("otherInfo") and f"Other candidate context: {body['otherInfo']}",
         body.get("preferredRole") and f"Preferred role type: {body['preferredRole']}",
         body.get("companyStage") and f"Company stage preference: {body['companyStage']}",
         body.get("workModel") and f"Work model preference: {body['workModel']}",
